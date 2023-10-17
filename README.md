@@ -172,7 +172,7 @@ zone "arjuna.D02.com" {
 zone "abimanyu.D02.com" {
   type slave;
   masters { 192.192.2.2; }; 
-  file "/var/lib/bind/abimanyu.b20.com";
+  file "/var/lib/bind/abimanyu.D02.com";
 };
 
 service bind9 restart
