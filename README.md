@@ -65,3 +65,134 @@ service bind9 restart
 
 Kemudian pada node Sadewa, lakukan testing dengan menambahkan `nameserver 192.192.2.2` (IP Yudhistira) kemudian lakukan ping arjuna.D02.com.
 
+## Soal 3
+Dengan cara yang sama seperti soal nomor 2, buatlah website utama dengan akses ke abimanyu.yyy.com dan alias www.abimanyu.yyy.com.
+
+Untuk soal nomor 3, langkah-langkah yang dilakukan sama persis seperti pada soal nomor 2. Hanya saja ganti arjuna.D02.com menjadi abimanyu.D02.com.
+
+```
+apt-get update
+apt-get install bind9 -y
+cp -r -f /root/prak1/bind /etc/
+service bind9 restart
+
+nano /etc/bind/named.conf.local
+
+zone "abimanyu.D02.com" {
+    type master;
+    file "/etc/bind/jarkom/abimanyu.D02.com";
+};
+
+mkdir /etc/bind/jarkom
+
+cp /etc/bind/db.local /etc/bind/jarkom/abimanyu.D02.com
+nano /etc/bind/jarkom/abimanyu.D02.com  
+
+(ganti menjadi abimanyu.02.com)
+((ganti ip (192.192.2.2)))
+((Tambahkan www	IN	CNAME	abimanyu.D02.com.))
+
+service bind9 restart
+```
+
+## Soal 4
+Kemudian, karena terdapat beberapa web yang harus di-deploy, buatlah subdomain parikesit.abimanyu.yyy.com yang diatur DNS-nya di Yudhistira dan mengarah ke Abimanyu. 
+
+Lakukan perintah berikut pada node Yudhistira
+
+```
+nano /etc/bind/jarkom/abimanyu.D02.com
+
+((Tambahkan))
+parikesit	IN	A	192.192.3.3
+service bind9 restart
+```
+Kemudian pada node Sadewa, lakukan testing untuk mengecek apakah abimanyu.D02.com atau www.abimanyu.D02.com dapat diakses. Lakukan ping parikesit.abimanyu.D02.com.
+
+## Soal 5 
+Buat juga reverse domain untuk domain utama. (Abimanyu saja yang direverse)
+
+Lakukan perintah ini pada node Yudhistira.
+```nano /etc/bind/named.conf.local
+
+zone "3.188.192.in-addr.arpa" {
+  type master;
+  file "/etc/bind/jarkom/3.188.192.in-addr.arpa";
+};
+
+cp /etc/bind/db.local /etc/bind/jarkom/3.188.192.in-addr.arpa
+
+nano /etc/bind/jarkom/3.188.192.in-addr.arpa
+
+((Tambahkan))
+3.188.192.in-addr.arpa.	IN	NS	abimanyu.D02.com.
+3			            IN	PTR	abimanyu.D02.com.
+
+service bind9 restart
+```
+Kemudian pada node `Sadewa`, lakukan perintah berikut.
+```
+// Install package dnsutils, ubah nameserver ke 192.192.122.1
+apt-get update
+apt-get install dnsutils -y
+
+// Kembalikan nameserver agar tersambung dengan Yudhistira
+host -t PTR 192.192.2.2
+```
+Setelah itu lakukan testing dengan menulis perintah berikut pada node Sadewa.
+```
+host -t PTR 192.192.3.3
+```
+
+## Soal 6
+Agar dapat tetap dihubungi ketika DNS Server Yudhistira bermasalah, buat juga Werkudara sebagai DNS Slave untuk domain utama.
+
+Lakukan perintah berikut pada node Yudhistira
+```
+nano /etc/bind/named.conf.local
+
+((Pada setiap zone (kecuali reverse), tambahkan))
+also-notify { 192.192.2.3; }; // IP Werkudara
+allow-transfer { 192.192.2.3; }; // IP Werkudara
+
+service bind9 restart
+```
+Kemudian pada node Werkudara, lakukan perintah berikut
+```
+apt-get update
+apt-get install bind9 -y
+nano /etc/bind/named.conf.local
+
+zone "arjuna.D02.com" {
+  type slave;
+  masters { 192.192.2.2; };
+  file "/var/lib/bind/arjuna.D02.com";
+};
+
+zone "abimanyu.D02.com" {
+  type slave;
+  masters { 192.192.2.2; }; 
+  file "/var/lib/bind/abimanyu.b20.com";
+};
+
+service bind9 restart
+```
+
+Sebelum melakukan testing pada node Sadewa, stop service bind9 terlebih dahulu pada node Yudhistira.
+``` 
+service bind9 stop
+```
+
+Setelah itu lakukan testing pada node Sadewa untuk mengecek apakah DNS Slave berhasil dibuat pada Werkudara.
+
+```
+nano /etc/resolv.conf
+nameserver 192.192.2.2
+nameserver 192.192.2.3
+
+ping www.arjuna.D02.com
+ping www.abimanyu.D02.com
+```
+
+
+
