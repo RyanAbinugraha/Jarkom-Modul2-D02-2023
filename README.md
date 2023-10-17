@@ -193,6 +193,132 @@ nameserver 192.192.2.3
 ping www.arjuna.D02.com
 ping www.abimanyu.D02.com
 ```
+## Soal 7
+Seperti yang kita tahu karena banyak sekali informasi yang harus diterima, buatlah subdomain khusus untuk perang yaitu baratayuda.abimanyu.yyy.com dengan alias www.baratayuda.abimanyu.yyy.com yang didelegasikan dari Yudhistira ke Werkudara dengan IP menuju ke Abimanyu dalam folder Baratayuda.
+
+Lakukan perintah berikut pada node `Yudhistira`
+
+```
+  nano /etc/bind/jarkom/abimanyu.D02.com
+
+  ((Tambahkan))
+  ns1	        IN	A	192.192.2.3
+  baratayuda	IN	NS	ns1
+
+  nano /etc/bind/named.conf.options
+
+  comment //dnsec
+  allow-query{any;};
+
+  service bind9 restart
+```
+
+Pada node `Werkudara`, lakukan perintah berikut.
+
+```
+nano /etc/bind/named.conf.options
+
+comment //dnsec
+allow-query{any;};
+
+  nano /etc/bind/named.conf.local
+  
+zone "baratayuda.abimanyu.D02.com" {
+  type master;
+  file "/etc/bind/delegasi/baratayuda.abimanyu.D02.com";
+};
+
+  mkdir /etc/bind/delegasi
+
+cp /etc/bind/db.local /etc/bind/Baratayuda/baratayuda.abimanyu.D02.com
+
+  nano  /etc/bind/delegasi/baratayuda.abimanyu.D02.com
+
+  ((ganti nama menjadi baratayuda.abimanyu.D02.com))
+  ((ganti IP abimanyu))
+  ((ganti AAAA jadi www	IN	A	192.192.3.3))
+
+  service bind9 restart
+```
+
+Pada node Sadewa, lakukan testing untuk mengecek apakah baratayuda.abimanyu.D02.com atau www.baratayuda.abimanyu.D02.com dapat diakses.
+
+```
+ping baratayuda.abimanyu.D02.com
+
+ping www.baratayuda.abimanyu.D02.com
+```
+
+## Soal 8
+Untuk informasi yang lebih spesifik mengenai Ranjapan Baratayuda, buatlah subdomain melalui Werkudara dengan akses rjp.baratayuda.abimanyu.yyy.com dengan alias www.rjp.baratayuda.abimanyu.yyy.com yang mengarah ke Abimanyu.
+
+Lakukan perintah berikut pada node Werkudara
+
+```
+nano /etc/bind/delegasi/baratayuda.abimanyu.D02.com
+
+((Tambahkan))
+rjp	    IN	A	    192.192.3.3
+www.rjp	IN	CNAME	rjp.baratayuda.abimanyu.D02.com.
+
+service bind9 restart
+```
+
+Pada node Sadewa, lakukan testing untuk mengecek apakah rjp.baratayuda.abimanyu.yyy.com atau www.rjp.baratayuda.abimanyu.yyy.com dapat diakses.
+
+```
+ping www.rjp.baratayuda.abimanyu.D02.com
+```
+
+## Soal 9
+Arjuna merupakan suatu Load Balancer Nginx dengan tiga worker (yang juga menggunakan nginx sebagai webserver) yaitu Prabakusuma, Abimanyu, dan Wisanggeni. Lakukan deployment pada masing-masing worker.
+
+Lakukan perintah berikut pada node `Pandudewanata`
+
+```
+apt-get update
+apt-get install nginx -y
+service nginx start
+```
+
+Lakukan perintah berikut pada node `Yudhistira`
+
+```
+apt-get install bind9 nginx -y
+service nginx start
+```
+
+Lakukan perintah berikut pada node `Prabukusuma/Wisangeni/Abimanyu`
+
+```
+apt-get update && apt install nginx php php-fpm -y
+mkdir /var/www/jarkom
+
+  nano /var/www/jarkom/index.php
+```
+
+```
+ <?php
+echo "Halo, Kamu berada di Prabukusuma";
+ 	?>
+
+	<?php
+echo "Halo, Kamu berada di Abimanyu";
+ 	?>
+
+	<?php
+echo "Halo, Kamu berada di Wisanggeni";
+ 	?>
+```
+
+```
+ln -s /etc/nginx/sites-available/jarkom /etc/nginx/sites-enabled
+
+service nginx start
+  service php7.0-fpm start
+
+nginx -t
+```
 
 
 
