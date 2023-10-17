@@ -33,3 +33,35 @@ iface eth3 inet static
 	netmask 255.255.255.0
 ```
 Setelah itu lakukan testing untuk mengecek apakah sudah terkoneksi dengan internet dengan melakukan `ping` google.com
+
+## Soal 2
+Buatlah website utama pada node arjuna dengan akses ke arjuna.yyy.com dengan alias www.arjuna.yyy.com dengan yyy merupakan kode kelompok.
+
+Pada node Yudhistira, lakukan perintah berikut:
+```
+apt-get update
+apt-get install bind9 -y
+cp -r -f /root/prak1/bind /etc/
+service bind9 restart
+
+nano /etc/bind/named.conf.local
+
+zone "arjuna.D02.com" {
+    type master;
+    file "/etc/bind/jarkom/arjuna.D02.com";
+};
+
+mkdir /etc/bind/jarkom
+
+cp /etc/bind/db.local /etc/bind/jarkom/arjuna.D02.com
+nano /etc/bind/jarkom/arjuna.D02.com  
+
+(ganti menjadi arjuna.02.com)
+((ganti ip (192.192.2.2)))
+((Tambahkan www	IN	CNAME	arjuna.D02.com.))
+
+service bind9 restart
+```
+
+Kemudian pada node Sadewa, lakukan testing dengan menambahkan `nameserver 192.192.2.2` (IP Yudhistira) kemudian lakukan ping arjuna.D02.com.
+
